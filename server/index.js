@@ -11,6 +11,7 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/petition', require('./routes/petition'));
 app.use('/api/ruling', require('./routes/ruling'));
 
+
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log('✅ MongoDB connected');
