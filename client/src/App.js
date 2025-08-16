@@ -1,26 +1,22 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./AuthContext";
+import React from "react";
+import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import ProtectedRoute from "./ProtectedRoute";
+import CitizenDashboard from "./pages/CitizenDashboard";
+import RulingDashboard from "./pages/RulingDashboard";
+import NonRulingDashboard from "./pages/NonRulingDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/citizen-dashboard" element={<CitizenDashboard />} />
+      <Route path="/ruling-dashboard" element={<RulingDashboard />} />
+      <Route path="/nonruling-dashboard" element={<NonRulingDashboard />} />
+      <Route path="/admin-dashboard" element={<AdminDashboard />} />
+    </Routes>
   );
 }
 

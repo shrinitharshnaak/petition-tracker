@@ -10,6 +10,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/petition', require('./routes/petition'));
 app.use('/api/ruling', require('./routes/ruling'));
+app.use('/api/user', require('./routes/user'));
+
 
 
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
