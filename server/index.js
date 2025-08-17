@@ -11,6 +11,7 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/petition', require('./routes/petition'));
 app.use('/api/ruling', require('./routes/ruling'));
 app.use('/api/user', require('./routes/user'));
+app.use("/api/leaderboard", require("./routes/leaderboard"));
 
 
 

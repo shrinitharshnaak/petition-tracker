@@ -1,12 +1,25 @@
+// models/User.js
 const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ["citizen", "non-ruling", "ruling", "admin"], required: true },
-  state: { type: String, required: true },
-  reputation: { type: Number, default: 0 }
-}, { timestamps: true });
+const UserSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: {
+      type: String,
+      enum: ["citizen", "rulingparty", "nonrulingparty", "admin"],
+      default: "citizen",
+    },
+    state: { type: String, required: true },
 
-module.exports = mongoose.model("User", userSchema);
+    // ✅ Reputation score for parties
+    reputation: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("User", UserSchema);

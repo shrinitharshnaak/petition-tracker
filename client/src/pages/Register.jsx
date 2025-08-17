@@ -1,154 +1,113 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
 
-function Register() {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+const states = [
+  "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana",
+  "Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur",
+  "Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana",
+  "Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Delhi","Puducherry","Jammu and Kashmir"
+];
+
+export default function Register() {
+  const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
     role: "citizen",
-    state: "Tamil Nadu", // default
+    state: ""
   });
-
-  const roles = ["citizen", "ruling-party", "non-ruling-party", "admin"];
-
-  const states = [
-    "Andhra Pradesh",
-    "Arunachal Pradesh",
-    "Assam",
-    "Bihar",
-    "Chhattisgarh",
-    "Goa",
-    "Gujarat",
-    "Haryana",
-    "Himachal Pradesh",
-    "Jharkhand",
-    "Karnataka",
-    "Kerala",
-    "Madhya Pradesh",
-    "Maharashtra",
-    "Manipur",
-    "Meghalaya",
-    "Mizoram",
-    "Nagaland",
-    "Odisha",
-    "Punjab",
-    "Rajasthan",
-    "Sikkim",
-    "Tamil Nadu",
-    "Telangana",
-    "Tripura",
-    "Uttar Pradesh",
-    "Uttarakhand",
-    "West Bengal",
-    // Union Territories
-    "Andaman and Nicobar Islands",
-    "Chandigarh",
-    "Dadra and Nagar Haveli and Daman and Diu",
-    "Delhi",
-    "Jammu and Kashmir",
-    "Ladakh",
-    "Lakshadweep",
-    "Puducherry",
-  ];
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/auth/register", formData);
-      alert("✅ Registered successfully! Please login.");
-      navigate("/");
+      await axios.post("http://localhost:5000/api/auth/register", form);
+      alert("Registered successfully! Please login.");
+      navigate("/login");
     } catch (err) {
-      alert("❌ Registration failed: " + err.response.data.message);
+      alert(err.response?.data?.message || "Registration failed");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-green-500">
-      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-green-400 to-blue-500">
+      <form
+        onSubmit={handleRegister}
+        className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md"
+      >
+        <h2 className="text-2xl font-bold text-center text-green-600 mb-4">
           Register
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="w-full p-3 border rounded-lg"
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="w-full p-3 border rounded-lg"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="w-full p-3 border rounded-lg"
-          />
 
-          {/* Role Selection */}
-          <select
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            className="w-full p-3 border rounded-lg"
-          >
-            {roles.map((role) => (
-              <option key={role} value={role}>
-                {role.charAt(0).toUpperCase() + role.slice(1)}
-              </option>
-            ))}
-          </select>
+        <input
+          name="name"
+          placeholder="Full Name"
+          className="w-full p-2 border rounded mb-3"
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          className="w-full p-2 border rounded mb-3"
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          className="w-full p-2 border rounded mb-3"
+          onChange={handleChange}
+          required
+        />
 
-          {/* State Selection */}
-          <select
-            name="state"
-            value={formData.state}
-            onChange={handleChange}
-            className="w-full p-3 border rounded-lg"
-          >
-            {states.map((st) => (
-              <option key={st} value={st}>
-                {st}
-              </option>
-            ))}
-          </select>
+        <select
+          name="role"
+          className="w-full p-2 border rounded mb-3"
+          onChange={handleChange}
+          required
+        >
+          <option value="citizen">Citizen</option>
+          <option value="ruling">Ruling Party</option>
+          <option value="non-ruling">Non-Ruling Party</option>
+          <option value="admin">Admin</option>
+        </select>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
-          >
-            Register
-          </button>
-        </form>
+        <select
+          name="state"
+          className="w-full p-2 border rounded mb-3"
+          onChange={handleChange}
+          required
+        >
+          <option value="">Select State</option>
+          {states.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
 
-        <p className="text-center mt-4 text-gray-600">
-          Already have an account?{" "}
-          <Link to="/" className="text-blue-600 hover:underline">
+        <button
+          type="submit"
+          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+        >
+          Register
+        </button>
+
+        <p className="mt-3 text-center text-gray-700">
+          Already registered?{" "}
+          <Link to="/login" className="text-green-600">
             Login
           </Link>
         </p>
-      </div>
+      </form>
     </div>
   );
 }
-
-export default Register;
