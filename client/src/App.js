@@ -1,4 +1,7 @@
+// src/App.js
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+
+// Pages
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
@@ -9,68 +12,103 @@ import CreatePetition from "./pages/CreatePetition";
 import MyPetitions from "./pages/MyPetitions";
 import ViewPetition from "./pages/ViewPetition";
 
-// PARTY (stubs, will build later)
+// PARTY
 import RulingDashboard from "./pages/RulingDashboard";
 import NonRulingDashboard from "./pages/NonRulingDashboard";
 
-// ADMIN (stub)
+// ADMIN
 import AdminDashboard from "./pages/AdminDashboard";
 
-function App() {
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+// ProtectedRoute
+import ProtectedRoute from "./components/ProtectedRoute";
 
+function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* AUTH */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* CITIZEN ROUTES */}
+        {/* CITIZEN */}
         <Route
           path="/citizen/dashboard"
-          element={token && role === "citizen" ? <CitizenDashboard /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute allowedRole="citizen">
+              <CitizenDashboard />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/citizen/profile"
-          element={token && role === "citizen" ? <CitizenProfile /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute allowedRole="citizen">
+              <CitizenProfile />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/citizen/create"
-          element={token && role === "citizen" ? <CreatePetition /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute allowedRole="citizen">
+              <CreatePetition />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/citizen/mypetitions"
-          element={token && role === "citizen" ? <MyPetitions /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute allowedRole="citizen">
+              <MyPetitions />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/citizen/petition/:id"
-          element={token && role === "citizen" ? <ViewPetition /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute allowedRole="citizen">
+              <ViewPetition />
+            </ProtectedRoute>
+          }
         />
 
         {/* RULING PARTY */}
         <Route
           path="/ruling/dashboard"
-          element={token && role === "ruling" ? <RulingDashboard /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute allowedRole="rulingparty">
+              <RulingDashboard />
+            </ProtectedRoute>
+          }
         />
 
         {/* NON-RULING PARTY */}
         <Route
           path="/nonruling/dashboard"
-          element={token && role === "non-ruling" ? <NonRulingDashboard /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute allowedRole="nonrulingparty">
+              <NonRulingDashboard />
+            </ProtectedRoute>
+          }
         />
 
         {/* ADMIN */}
         <Route
           path="/admin/dashboard"
-          element={token && role === "admin" ? <AdminDashboard /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
         />
 
-        {/* FALLBACK */}
-        <Route path="*" element={<h2 className="text-center mt-10">404 - Page Not Found</h2>} />
+        {/* 404 */}
+        <Route
+          path="*"
+          element={<h2 className="text-center mt-10">404 - Page Not Found</h2>}
+        />
       </Routes>
     </Router>
   );

@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from "react";
 
-export default function MyPetitions() {
+export default function BrowsePetitions() {
   const [petitions, setPetitions] = useState([]);
 
   useEffect(() => {
-    const fetchMyPetitions = async () => {
-      const res = await fetch("/api/petition/my", {
+    const fetchPetitions = async () => {
+      const res = await fetch("/api/petition/all", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const data = await res.json();
       setPetitions(data || []);
     };
-    fetchMyPetitions();
+    fetchPetitions();
   }, []);
 
   return (
     <div className="p-6">
-      <h2 className="text-lg font-bold mb-4 text-green-600">My Petitions</h2>
+      <h2 className="text-lg font-bold mb-4 text-green-600">Browse Petitions</h2>
       {petitions.length > 0 ? (
         <ul className="space-y-3">
           {petitions.map((p) => (
@@ -27,7 +27,7 @@ export default function MyPetitions() {
           ))}
         </ul>
       ) : (
-        <p>No petitions found.</p>
+        <p>No petitions available.</p>
       )}
     </div>
   );

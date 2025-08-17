@@ -75,9 +75,9 @@ export default function Register() {
           required
         >
           <option value="citizen">Citizen</option>
-          <option value="ruling">Ruling Party</option>
-          <option value="non-ruling">Non-Ruling Party</option>
-          <option value="admin">Admin</option>
+  <option value="rulingparty">Ruling Party</option>
+  <option value="nonrulingparty">nonruling Party</option>
+  <option value="admin">Admin</option>
         </select>
 
         <select

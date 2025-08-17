@@ -73,7 +73,7 @@ export default function PetitionList({ token, role }) {
             </button>
           )}
 
-          {role === "non-ruling" && p.status === "Active" && (
+          {role === "nonruling" && p.status === "Active" && (
             <div className="flex gap-2 mt-2">
               <button
                 onClick={() => handleSolve(p._id)}
