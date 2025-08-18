@@ -1,26 +1,35 @@
 // src/App.js
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
-// Pages
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
-// CITIZEN
+// Dashboards
 import CitizenDashboard from "./pages/CitizenDashboard";
-import CitizenProfile from "./pages/CitizenProfile";
-import CreatePetition from "./pages/CreatePetition";
-import MyPetitions from "./pages/MyPetitions";
-import ViewPetition from "./pages/ViewPetition";
-
-// PARTY
 import RulingDashboard from "./pages/RulingDashboard";
 import NonRulingDashboard from "./pages/NonRulingDashboard";
-
-// ADMIN
 import AdminDashboard from "./pages/AdminDashboard";
 
-// ProtectedRoute
-import ProtectedRoute from "./components/ProtectedRoute";
+// ProtectedRoute Component
+function ProtectedRoute({ children, allowedRole }) {
+  const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    if (token && (!allowedRole || role === allowedRole)) {
+      setIsAuthorized(true);
+    }
+    setLoading(false);
+  }, [allowedRole]);
+
+  if (loading) return <div className="text-center mt-20">Loading...</div>;
+
+  return isAuthorized ? children : <Navigate to="/login" replace />;
+}
 
 function App() {
   return (
@@ -28,53 +37,21 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* AUTH */}
+        {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* CITIZEN */}
+        {/* Citizen Dashboard */}
         <Route
-          path="/citizen/dashboard"
+          path="/dashboard"
           element={
             <ProtectedRoute allowedRole="citizen">
               <CitizenDashboard />
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/citizen/profile"
-          element={
-            <ProtectedRoute allowedRole="citizen">
-              <CitizenProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/citizen/create"
-          element={
-            <ProtectedRoute allowedRole="citizen">
-              <CreatePetition />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/citizen/mypetitions"
-          element={
-            <ProtectedRoute allowedRole="citizen">
-              <MyPetitions />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/citizen/petition/:id"
-          element={
-            <ProtectedRoute allowedRole="citizen">
-              <ViewPetition />
-            </ProtectedRoute>
-          }
-        />
 
-        {/* RULING PARTY */}
+        {/* Ruling Party Dashboard */}
         <Route
           path="/ruling/dashboard"
           element={
@@ -84,7 +61,7 @@ function App() {
           }
         />
 
-        {/* NON-RULING PARTY */}
+        {/* Non-Ruling Party Dashboard */}
         <Route
           path="/nonruling/dashboard"
           element={
@@ -94,7 +71,7 @@ function App() {
           }
         />
 
-        {/* ADMIN */}
+        {/* Admin Dashboard */}
         <Route
           path="/admin/dashboard"
           element={
@@ -104,7 +81,7 @@ function App() {
           }
         />
 
-        {/* 404 */}
+        {/* Fallback */}
         <Route
           path="*"
           element={<h2 className="text-center mt-10">404 - Page Not Found</h2>}

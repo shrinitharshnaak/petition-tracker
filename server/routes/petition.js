@@ -1,133 +1,138 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const router = express.Router();
-
 const Petition = require("../models/Petition");
-const Party = require("../models/Party");
-const { verifyToken } = require("../middleware/auth");
+const User = require("../models/User");
+const verifyToken = require("../middleware/verifyToken");
 
-// ---------------------------- Config ----------------------------
-const VALID_STATUS = ["Active", "In-Progress", "Resolved", "Closed", "Escalated"];
-const REPUTATION_POINTS = {
-  PICKED_UP: 2,
-  RESOLVED: 5,
-};
+// ============================
+// GET all petitions
+// ============================
+router.get("/petitions", verifyToken, async (req, res) => {
+  try {
+    const petitions = await Petition.find().sort({ createdAt: -1 });
+    res.json(petitions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-// ---------------------------- Helper ----------------------------
-async function bumpPartyReputation(partyId, points) {
-  const party = await Party.findById(partyId);
-  if (!party) return;
-  if (typeof party.reputationScore !== "number") party.reputationScore = 0;
-  party.reputationScore += points;
-  await party.save();
-}
+// ============================
+// GET petitions by citizen
+// ============================
+router.get("/petitions/citizen/:id", verifyToken, async (req, res) => {
+  try {
+    const petitions = await Petition.find({ creator: req.params.id }).sort({ createdAt: -1 });
+    res.json(petitions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-// ---------------------------- Routes ----------------------------
-
-// ✅ Citizen Routes
-router.post("/", verifyToken, async (req, res) => {
+// ============================
+// CREATE petition
+// ============================
+router.post("/petitions", verifyToken, async (req, res) => {
   try {
     const { title, description, state } = req.body;
-    const petition = new Petition({ title, description, state, creator: req.user.id });
+    const creator = req.user.id; // decoded from JWT
+
+    if (!title || !description || !state || !creator) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const petition = new Petition({ title, description, state, creator });
     await petition.save();
     res.status(201).json(petition);
   } catch (err) {
-    res.status(500).json({ message: "Failed to create petition" });
+    res.status(500).json({ error: err.message });
   }
 });
 
-router.get("/", verifyToken, async (req, res) => {
+// ============================
+// DASHBOARD STATS
+// ============================
+router.get("/stats", verifyToken, async (req, res) => {
   try {
-    const petitions = await Petition.find({})
-      .populate("creator", "name")
-      .populate("handledBy", "name");
-    res.json(petitions);
+    const totalPetitions = await Petition.countDocuments();
+    const solvedPetitions = await Petition.countDocuments({ status: "Resolved" });
+    const welfareIndex = totalPetitions ? Math.round((solvedPetitions / totalPetitions) * 100) : 0;
+
+    res.json({ totalPetitions, solvedPetitions, welfareIndex });
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch petitions" });
+    res.status(500).json({ error: err.message });
   }
 });
 
-router.get("/:id", verifyToken, async (req, res) => {
-  if (!mongoose.Types.ObjectId.isValid(req.params.id))
-    return res.status(400).json({ message: "Invalid petition ID" });
-
-  const petition = await Petition.findById(req.params.id)
-    .populate("creator", "name")
-    .populate("handledBy", "name");
-  if (!petition) return res.status(404).json({ message: "Not found" });
-  res.json(petition);
-});
-
-// ---------------- nonruling Routes ----------------
-router.get("/state/:state", verifyToken, async (req, res) => {
-  try {
-    const petitions = await Petition.find({
-      state: req.params.state,
-      status: { $in: ["Active", "In-Progress"] },
-    }).sort({ createdAt: -1 });
-    res.json(petitions);
-  } catch (err) {
-    res.status(500).json({ message: "Error fetching petitions" });
-  }
-});
-
-// ---------------- Ruling / nonruling Status Update ----------------
-router.put("/status/:id", verifyToken, async (req, res) => {
-  try {
-    const { status } = req.body;
-    if (!mongoose.Types.ObjectId.isValid(req.params.id))
-      return res.status(400).json({ message: "Invalid petition ID" });
-
-    if (!VALID_STATUS.includes(status))
-      return res.status(400).json({ message: "Invalid status" });
-
-    const petition = await Petition.findById(req.params.id);
-    if (!petition) return res.status(404).json({ message: "Not found" });
-
-    petition.status = status;
-    petition.handledBy = req.user.id;
-
-    // Reputation points
-    if (status === "In-Progress") await bumpPartyReputation(req.user.id, REPUTATION_POINTS.PICKED_UP);
-    if (status === "Resolved") await bumpPartyReputation(req.user.id, REPUTATION_POINTS.RESOLVED);
-
-    await petition.save();
-    res.json({ message: "Status updated", petition });
-  } catch (err) {
-    res.status(500).json({ message: "Failed to update status" });
-  }
-});
-
-// ---------------- Delete Petition ----------------
-router.delete("/:id", verifyToken, async (req, res) => {
-  if (!mongoose.Types.ObjectId.isValid(req.params.id))
-    return res.status(400).json({ message: "Invalid petition ID" });
-
-  const petition = await Petition.findByIdAndDelete(req.params.id);
-  if (!petition) return res.status(404).json({ message: "Not found" });
-  res.json({ message: "Deleted successfully" });
-});
-
-// ---------------- Stats & Leaderboard ----------------
-router.get("/stats/all", verifyToken, async (req, res) => {
-  try {
-    const total = await Petition.countDocuments();
-    const active = await Petition.countDocuments({ status: "Active" });
-    const solved = await Petition.countDocuments({ status: "Resolved" });
-    const signaturesAgg = await Petition.aggregate([{ $group: { _id: null, total: { $sum: "$signatureCount" } } }]);
-    const signatures = signaturesAgg[0]?.total || 0;
-    res.json({ total, active, solved, signatures });
-  } catch (err) {
-    res.status(500).json({ message: "Failed to fetch stats" });
-  }
-});
-
+// ============================
+// LEADERBOARD
+// ============================
 router.get("/leaderboard", verifyToken, async (req, res) => {
   try {
-    const parties = await Party.find({}).sort({ reputationScore: -1 }).limit(10);
-    res.json(parties);
+    const leaderboard = await Petition.aggregate([
+      { $match: { status: "Resolved" } },
+      { $group: { _id: "$creator", solvedCount: { $sum: 1 } } },
+      { $sort: { solvedCount: -1 } },
+      { $limit: 10 },
+    ]);
+
+    const result = await Promise.all(
+      leaderboard.map(async (l) => {
+        const user = await User.findById(l._id);
+        return {
+          name: user ? user.name : "Unknown",
+          role: user ? user.role : "citizen",
+          solvedCount: l.solvedCount,
+        };
+      })
+    );
+
+    res.json(result);
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch leaderboard" });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================
+// UPDATE PETITION STATUS
+// ============================
+router.put("/petitions/:id/status", verifyToken, async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!status) return res.status(400).json({ error: "Status is required" });
+
+    const petition = await Petition.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+
+    if (!petition) return res.status(404).json({ error: "Petition not found" });
+
+    res.json(petition);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================
+// ESCALATE PETITION TO RULING PARTY
+// ============================
+router.put("/petitions/:id/escalate", verifyToken, async (req, res) => {
+  try {
+    const { rulingPartyId } = req.body;
+    if (!rulingPartyId) return res.status(400).json({ error: "Ruling Party ID required" });
+
+    const petition = await Petition.findByIdAndUpdate(
+      req.params.id,
+      { status: "Escalated", escalatedTo: rulingPartyId },
+      { new: true }
+    );
+
+    if (!petition) return res.status(404).json({ error: "Petition not found" });
+
+    res.json(petition);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
