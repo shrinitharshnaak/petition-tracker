@@ -1,83 +1,76 @@
+// src/pages/Login.jsx
 import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", {
         email,
         password,
       });
 
-      const { token, role, state } = res.data;
+      // Store token, user info
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userId", res.data.user._id);
+      localStorage.setItem("name", res.data.user.name);
+      localStorage.setItem("email", res.data.user.email);
+      localStorage.setItem("role", res.data.user.role);
+      localStorage.setItem("state", res.data.user.state);
 
-      if (!token) {
-        alert("Login failed");
-        setLoading(false);
-        return;
-      }
-
-      // Store in localStorage
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      localStorage.setItem("state", state || "Unknown");
-      localStorage.setItem("email", email);
-
-      // Redirect to dashboard
-      navigate("/dashboard", { replace: true });
+      // Navigate based on role
+      if (res.data.user.role === "citizen") navigate("/dashboard");
+      else if (res.data.user.role === "rulingparty") navigate("/ruling/dashboard");
+      else if (res.data.user.role === "nonrulingparty") navigate("/nonruling/dashboard");
+      else if (res.data.user.role === "admin") navigate("/admin/dashboard");
     } catch (err) {
-      console.error("Login error:", err);
-      alert("Invalid email or password");
-    } finally {
-      setLoading(false);
+      console.error(err);
+      alert("Invalid credentials");
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-green-400 to-blue-500">
-      <form
-        onSubmit={handleLogin}
-        className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md"
-      >
-        <h2 className="text-2xl font-bold text-green-600 mb-6 text-center">
-          Citizen Login
-        </h2>
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+        <h2 className="text-2xl font-bold mb-6 text-center text-green-700">Login</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Email"
+            className="w-full p-3 border rounded-lg"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full p-3 border rounded-lg"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button
+            type="submit"
+            className="w-full bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition"
+          >
+            Login
+          </button>
+        </form>
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 border rounded-lg mb-4"
-          required
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 border rounded-lg mb-6"
-          required
-        />
-
-        <button
-          type="submit"
-          className="w-full bg-green-600 text-white p-3 rounded-lg hover:bg-green-700"
-          disabled={loading}
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
+        <p className="mt-4 text-center text-gray-600">
+          Don't have an account?{" "}
+          <Link to="/register" className="text-green-600 hover:underline">
+            Register here
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

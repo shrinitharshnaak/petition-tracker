@@ -11,8 +11,8 @@ const PetitionSchema = new mongoose.Schema(
       default: "Active",
     },
     creator: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    handledBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // party currently handling
-    escalatedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // ruling party if escalated
+    handledBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    escalatedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     signatureCount: { type: Number, default: 0 },
   },
   { timestamps: true }

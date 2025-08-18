@@ -4,9 +4,7 @@ const Petition = require("../models/Petition");
 const User = require("../models/User");
 const verifyToken = require("../middleware/verifyToken");
 
-// ============================
 // GET all petitions
-// ============================
 router.get("/petitions", verifyToken, async (req, res) => {
   try {
     const petitions = await Petition.find().sort({ createdAt: -1 });
@@ -16,9 +14,7 @@ router.get("/petitions", verifyToken, async (req, res) => {
   }
 });
 
-// ============================
 // GET petitions by citizen
-// ============================
 router.get("/petitions/citizen/:id", verifyToken, async (req, res) => {
   try {
     const petitions = await Petition.find({ creator: req.params.id }).sort({ createdAt: -1 });
@@ -28,15 +24,13 @@ router.get("/petitions/citizen/:id", verifyToken, async (req, res) => {
   }
 });
 
-// ============================
 // CREATE petition
-// ============================
 router.post("/petitions", verifyToken, async (req, res) => {
   try {
     const { title, description, state } = req.body;
-    const creator = req.user.id; // decoded from JWT
+    const creator = req.user.id; // use token user id
 
-    if (!title || !description || !state || !creator) {
+    if (!title || !description || !state) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -48,24 +42,19 @@ router.post("/petitions", verifyToken, async (req, res) => {
   }
 });
 
-// ============================
 // DASHBOARD STATS
-// ============================
 router.get("/stats", verifyToken, async (req, res) => {
   try {
     const totalPetitions = await Petition.countDocuments();
     const solvedPetitions = await Petition.countDocuments({ status: "Resolved" });
     const welfareIndex = totalPetitions ? Math.round((solvedPetitions / totalPetitions) * 100) : 0;
-
     res.json({ totalPetitions, solvedPetitions, welfareIndex });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ============================
 // LEADERBOARD
-// ============================
 router.get("/leaderboard", verifyToken, async (req, res) => {
   try {
     const leaderboard = await Petition.aggregate([
@@ -92,20 +81,13 @@ router.get("/leaderboard", verifyToken, async (req, res) => {
   }
 });
 
-// ============================
 // UPDATE PETITION STATUS
-// ============================
 router.put("/petitions/:id/status", verifyToken, async (req, res) => {
   try {
     const { status } = req.body;
     if (!status) return res.status(400).json({ error: "Status is required" });
 
-    const petition = await Petition.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
-
+    const petition = await Petition.findByIdAndUpdate(req.params.id, { status }, { new: true });
     if (!petition) return res.status(404).json({ error: "Petition not found" });
 
     res.json(petition);
@@ -114,9 +96,7 @@ router.put("/petitions/:id/status", verifyToken, async (req, res) => {
   }
 });
 
-// ============================
-// ESCALATE PETITION TO RULING PARTY
-// ============================
+// ESCALATE PETITION
 router.put("/petitions/:id/escalate", verifyToken, async (req, res) => {
   try {
     const { rulingPartyId } = req.body;
